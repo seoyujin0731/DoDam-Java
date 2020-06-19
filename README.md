@@ -12,5 +12,5 @@
 - 오지원
 
 ## Skill
-- Java : Main Language
-- Spring : Framework
+- [Java](https://www.oracle.com/java/) : Main Language
+- [Spring boot](https://spring.io/tools) : Tools
