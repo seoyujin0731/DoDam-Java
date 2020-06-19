@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.board.mapper.BoardMapper">
+
+   
+   <select id="boardList" resultType="com.example.board.model.BoardVo" parameterType="int">
+   SELECT  
+               @rownum:=@rownum+1 NO,
+                    DD_BOARD_NO,
+                    DD_BOARD_CATEGORY,
+                    DD_BOARD_TITLE,
+                    DD_BOARD_CONTENTS,
+                    DD_USER_ID,
+                    DATE_FORMAT(DD_INSERT_DATE, '%Y-%m-%d') AS DD_INSERT_DATE
+   FROM 
+               DD_BOARD,
+               (SELECT @rownum:=0) r
+   WHERE 
+               DD_BOARD_CATEGORY=#{dd_board_category}
+   AND
+               DD_BOARD_DELFLAG = 'N'
+   ORDER BY  
+               NO DESC
+   </select>
+   <select id="boardDetail" resultType="com.example.board.model.BoardVo" parameterType="int">
+   SELECT        
+                    DD_BOARD_NO,
+                    DD_BOARD_CATEGORY,
+                    DD_BOARD_TITLE,
+                    DD_BOARD_CONTENTS,
+                    DD_USER_ID,
+                    DATE_FORMAT(DD_INSERT_DATE, '%Y-%m-%d') AS DD_INSERT_DATE,
+                    DATE_FORMAT(DD_MODIFY_DATE, '%Y-%m-%d') AS DD_MODIFY_DATE
+                    
+   FROM 
+               DD_BOARD
+            
+   WHERE
+               DD_BOARD_DELFLAG = 'N'
+    AND 
+                DD_BOARD_NO=#{dd_board_no}
+   
+   </select>
+   <delete id="boardDelete" parameterType="int">
+   DELETE 
+   FROM      
+               DD_BOARD
+   WHERE          
+                DD_BOARD_NO=#{dd_board_no}
+   </delete>
+   
+   <insert id="boardInsert" parameterType="com.example.board.model.BoardVo">
+   INSERT 
+   INTO     
+               DD_BOARD (DD_BOARD_CATEGORY, DD_BOARD_TITLE, DD_BOARD_CONTENTS, DD_USER_ID )
+   VALUES         
+               (#{dd_board_category}, #{dd_board_title}, #{dd_board_contents},#{dd_user_id})
+               
+   </insert>
+   
+   <update id="boardUpdate" parameterType="com.example.board.model.BoardVo">
+   UPDATE          
+               DD_BOARD
+   SET          
+               DD_BOARD_TITLE=#{dd_board_title},DD_BOARD_CONTENTS=#{dd_board_contents}
+   WHERE    
+               DD_BOARD_NO=#{dd_board_no}
+   
+   </update>
+   
+   <select id="boardReplyList" resultType="com.example.board.model.BoardReplyVo" parameterType="int">
+   SELECT          
+               @rownum:=@rownum+1 NO,
+               DD_REPLY_NO,
+               DD_BOARD_NO,
+               DD_USER_ID,
+               DD_REPLY_CONTENT,
+               DATE_FORMAT(DD_REPLY_DATE, '%Y-%m-%d') AS DD_REPLY_DATE
+   FROM       
+               DD_REPLY,
+               (SELECT @rownum:=0) r
+               
+   WHERE
+               DD_BOARD_NO=#{dd_board_no}                     
+   AND
+               DD_BOARD_REPLY_DELFLAG = 'N'
+   ORDER BY  
+               NO DESC
+   
+   </select>
+   
+   <insert id="boardReplyInsert" parameterType="com.example.board.model.BoardReplyVo">
+   INSERT 
+   INTO 
+               DD_REPLY(DD_BOARD_NO,DD_USER_ID,DD_REPLY_CONTENT)
+   VALUES         
+               (#{dd_board_no},#{dd_user_id},#{dd_reply_content})
+               
+   
+   </insert>
+   
+   <delete id="boardReplyDelete" parameterType="int">
+   DELETE 
+   FROM          
+               DD_REPLY
+   WHERE 
+               DD_REPLY_NO=#{dd_reply_no}
+   
+   </delete>
+   
+   <select id="boardReplyCount" resultType="int" parameterType="int"> 
+   SELECT 
+               COUNT(*)
+   FROM 
+               DD_REPLY
+   WHERE 
+               DD_BOARD_NO=#{dd_board_no}
+   </select>
+   
+</mapper>

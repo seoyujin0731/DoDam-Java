@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.user.mapper.UserMapper">
+
+<select id="UserList" resultType="com.example.user.model.UserVo">
+
+	SELECT
+					DD_USER_ID,
+                    DD_USER_PW,
+                    DD_USER_EMAIL,
+                    DD_USER_TEL,
+                    DD_USER_BRITH,
+                    DD_USER_LOCATION,
+                    DD_USER_GENDER,
+                    DD_USER_DEL
+	FROM
+					DD_USER
+
+
+</select>
+
+
+<insert id="UserSignUp" parameterType="com.example.user.model.UserVo">
+
+	INSERT INTO 
+					DD_USER (
+								DD_USER_ID,
+								DD_USER_PW, 
+								DD_USER_EMAIL, 
+								DD_USER_TEL, 
+								DD_USER_BRITH, 
+								DD_USER_GENDER,
+                                ISACCOUNTNONLOCKED,
+                                ISACCOUNTNONEXPIRED,
+                                ISCREDENTIALNONEXPIRED,
+                                ISENABLED
+                               )
+	VALUES 
+								(#{dd_user_id}, #{dd_user_pw}, #{dd_user_email}, #{dd_user_tel}, #{dd_user_brith}, #{dd_user_gender} ,true, true, true, true)
+
+
+</insert>
+
+
+
+
+<select id="readUser" parameterType="String" resultType="com.example.user.model.UserVo">
+	
+	SELECT
+					*
+	FROM
+					DD_USER
+	WHERE
+					DD_USER_ID = #{dd_user_id}		
+</select>
+
+
+    <select id="readAuthority" parameterType="String" resultType="String">
+        SELECT 
+        				DD_AUTHORITY_NAME 
+        FROM 
+        				DD_AUTHORITY
+        WHERE 
+        				DD_USER_ID = #{dd_user_id}
+    </select>
+    
+    
+    
+<!--     20.05.04 유진 (중복) -->
+    <select id="overlapName" parameterType="com.example.user.model.UserVo" resultType="int">
+    	
+    	SELECT 
+    					COUNT(*) 
+    	FROM 
+    					DD_USER
+    					
+    	<if test="dd_user_id != null">
+    		WHERE 
+    				    DD_USER_ID = #{dd_user_id}
+  		</if>
+  		
+  		<if test="dd_user_email != null">
+  			WHERE 
+    					DD_USER_EMAIL = #{dd_user_email}
+  		</if>
+  		
+     </select>
+     
+     
+<!--      20.05.04 유진 -->
+     <!-- 권한 세팅  -->
+	<insert id="insertUserAuthority" parameterType="String">
+		
+		INSERT INTO 
+						DD_AUTHORITY(
+										DD_USER_ID,
+										DD_AUTHORITY_NAME
+										) 
+		VALUES
+						(#{dd_user_id},'USER')
+	
+	</insert>
+	
+<!-- 	20.06.11 유진 수정 -->
+	 <select id="reserveList" parameterType="com.example.reserve.model.Hospital_reserveVo" resultType="com.example.reserve.model.Hospital_reserveVo">
+	
+	
+SELECT  
+			r.DD_RESERVE_DATE, DD_HOSPITAL_NAME
+FROM  
+			DD_RESERVE r join DD_HOSPITAL h
+ON
+			(r.DD_HOSPITAL_NO = h.DD_HOSPITAL_NO)
+WHERE 
+			r.DD_RESERVE_DATE  &gt; #{dd_reserve_date}  
+AND 
+			r.DD_RESERVE_DATE &lt; DATE_ADD(#{dd_reserve_date}, INTERVAL +1 DAY) 
+AND 
+			DD_HOSPITAL_NAME=#{dd_hospital_name}
+AND			
+			DD_RESERVE_CHECK = 'Y'
+			
+     </select>
+     		
+<!--      		2900519지원							 -->
+<insert id="hospitalInsert" parameterType="com.example.reserve.model.HospitalVo">
+
+INSERT 
+INTO 
+		   DD_HOSPITAL (
+						DD_HOSPITAL_NAME, 
+						DD_HOSPITAL_TEL, 
+                        DD_HOSPITAL_ADDRESS) 
+VALUES(
+						#{dd_hospital_name}, 
+						#{dd_hospital_tel}, 
+						#{dd_hospital_address})
+
+</insert>
+<!--      		2900519지원							 -->
+<select id="hospitalCount" parameterType="com.example.reserve.model.HospitalVo" resultType="int" >
+SELECT 
+				COUNT(*)
+FROM 
+				DD_HOSPITAL
+WHERE 			
+				DD_HOSPITAL_NAME=#{dd_hospital_name} 
+AND 
+				DD_HOSPITAL_ADDRESS=#{dd_hospital_address}
+
+
+</select>
+
+<!--      		2900519지원							 -->
+<insert id="reserveInsert" parameterType="com.example.reserve.model.Hospital_reserveVo">
+
+INSERT INTO 
+				DD_RESERVE(DD_USER_ID,DD_HOSPITAL_NO,DD_RESERVE_DATE) 
+ VALUES
+ 				(#{dd_user_id},
+				(SELECT DISTINCT 		
+										H.DD_HOSPITAL_NO
+				FROM 					
+										DD_HOSPITAL H left outer join DD_RESERVE R
+    			ON 
+    									H.DD_HOSPITAL_NO=R.DD_HOSPITAL_NO
+    			WHERE 				
+    									DD_HOSPITAL_NAME=#{dd_hospital_name})
+    			
+    			,#{dd_reserve_date})
+
+
+</insert>
+
+<!--      15.21유진 -->
+<!-- 20.06.10 유진 수정 -->
+     <select id="readReserve" parameterType="String" resultType="com.example.reserve.model.Hospital_reserveVo">
+     
+    SELECT
+                @rownum:=@rownum+1 NO,
+                r.DD_USER_ID, r.DD_RESERVE_DATE, s.DD_HOSPITAL_NAME
+   FROM 
+               DD_RESERVE r
+   INNER JOIN 
+               DD_HOSPITAL s ON r.DD_HOSPITAL_NO =s.DD_HOSPITAL_NO,
+               (SELECT @rownum:=0) r
+     WHERE
+               DD_USER_ID = #{dd_user_id}
+     AND
+     			DD_RESERVE_CHECK = 'Y'
+     AND 
+     			DD_RESERVE_DATE &lt; NOW()     
+    ORDER BY
+               r.DD_RESERVE_DATE
+   DESC
+   
+     </select>
+     
+     <!-- 200526 지원 -->
+<!--      수정했어요 시바아아아아ㅏ -->
+     <select id="nowReserveList" parameterType="String" resultType="com.example.reserve.model.Hospital_reserveVo">
+     SELECT 
+     			 @rownum:=@rownum+1 NO, DD_USER_ID, DD_HOSPITAL_NAME, DD_RESERVE_DATE, DD_RESERVE_CHECK
+	 FROM 
+	 			DD_HOSPITAL H join DD_RESERVE R
+     ON 
+    			H.DD_HOSPITAL_NO=R.DD_HOSPITAL_NO,
+    			(SELECT @rownum:=0) r
+     WHERE 	
+         		DD_USER_ID= #{dd_user_id}
+     AND 
+     			DD_RESERVE_DATE &gt;= NOW()
+     </select>
+     
+     <!-- 200526 지원 -->
+     <delete id="reserveDelete" parameterType="com.example.reserve.model.Hospital_reserveVo">
+     DELETE 
+     FROM 		
+     			DD_RESERVE 
+     WHERE 
+     			DD_USER_ID=#{dd_user_id} 
+     AND 		
+    			DD_RESERVE_DATE=#{dd_reserve_date}
+     AND 
+    			DD_HOSPITAL_NO =(  
+	SELECT 
+				DD_HOSPITAL_NO
+    FROM 
+    			(
+    			SELECT 
+    			DISTINCT 	
+    						R.DD_HOSPITAL_NO DD_HOSPITAL_NO
+				FROM 
+							DD_HOSPITAL H join DD_RESERVE  R
+				ON 
+							H.DD_HOSPITAL_NO=R.DD_HOSPITAL_NO
+                WHERE 
+                			H.DD_HOSPITAL_NAME= #{dd_hospital_name}) tmp);
+    
+     </delete>
+     
+     <!-- 200527 지원 -->
+     <update id="userUpdate" parameterType="com.example.user.model.UserVo">
+     UPDATE 	
+     			DD_USER
+	 SET 
+	 			DD_USER_EMAIL=#{dd_user_email}, 
+	 			
+	 			DD_USER_TEL=#{dd_user_tel}, 
+	 			
+	 			DD_USER_BRITH=#{dd_user_brith}
+	 WHERE 	
+	 			DD_USER_ID=#{dd_user_id}
+     </update>
+
+<!--     20.06.01유진 -->
+     <select id="reservetable" resultType="com.example.reserve.model.Hospital_reserveVo">
+     
+	SELECT
+                @rownum:=@rownum+1 NO,
+                r.DD_RESERVE_NO, r.DD_USER_ID, r.DD_RESERVE_DATE, s.DD_HOSPITAL_NAME, r.DD_RESERVE_CHECK
+	FROM 
+               DD_RESERVE r
+	INNER JOIN 
+               DD_HOSPITAL s ON r.DD_HOSPITAL_NO =s.DD_HOSPITAL_NO,
+               (SELECT @rownum:=0) r
+	WHERE 
+				DD_RESERVE_CHECK = 'N'
+	ORDER BY
+               	NO
+	DESC
+   
+     </select>
+     
+<!--      20.06.10 유진 병원 예약 승인 -->
+     <update id="reserveOk" parameterType="int">
+     
+	UPDATE
+					DD_RESERVE
+	SET 
+					DD_RESERVE_CHECK = 'Y'
+	WHERE
+					DD_RESERVE_NO = #{dd_reserve_no}
+     
+     </update>
+     
+     
+     <!--      20.06.10 유진 병원 예약 거절 -->
+     <update id="reserveNo" parameterType="int">
+     
+	UPDATE
+					DD_RESERVE
+	SET 
+					DD_RESERVE_CHECK = 'X'
+	WHERE
+					DD_RESERVE_NO = #{dd_reserve_no}
+     
+     </update>
+     
+     <select id="CalReserveList" parameterType="String" resultType="com.example.reserve.model.Hospital_reserveVo">
+     SELECT 
+     			 @rownum:=@rownum+1 NO, DD_USER_ID, DD_HOSPITAL_NAME, DD_RESERVE_DATE, DD_RESERVE_CHECK
+	 FROM 
+	 			DD_HOSPITAL H join DD_RESERVE R
+     ON 
+    			H.DD_HOSPITAL_NO=R.DD_HOSPITAL_NO,
+    			(SELECT @rownum:=0) r
+     WHERE 	
+         		DD_USER_ID= #{dd_user_id}
+     AND 
+     			DD_RESERVE_DATE &gt;= NOW()
+     AND
+     			DD_RESERVE_CHECK = 'Y'			
+     </select>
+
+
+
+     <select id="adminReservetable" resultType="com.example.reserve.model.Hospital_reserveVo">
+     
+	SELECT
+                @rownum:=@rownum+1 NO,
+                r.DD_RESERVE_NO, r.DD_USER_ID, r.DD_RESERVE_DATE, s.DD_HOSPITAL_NAME, r.DD_RESERVE_CHECK
+	FROM 
+               DD_RESERVE r
+	INNER JOIN 
+               DD_HOSPITAL s ON r.DD_HOSPITAL_NO =s.DD_HOSPITAL_NO,
+               (SELECT @rownum:=0) r
+	WHERE 
+				DD_RESERVE_CHECK = 'N'
+	AND 
+     			DD_RESERVE_DATE &gt;= NOW()
+	ORDER BY
+               	NO
+	DESC
+	
+	</select>
+	
+</mapper>

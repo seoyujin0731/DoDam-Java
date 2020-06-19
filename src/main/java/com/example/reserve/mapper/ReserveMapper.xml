@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.reserve.mapper.ReserveMapper">
+
+
+
+
+<!--     <select id="reserveList" parameterType="com.example.reserve.model.Hospital_reserveVo" resultType="com.example.reserve.model.Hospital_reserveVo"> -->
+	
+	
+<!-- SELECT   -->
+<!-- 			r.DD_RESERVE_DATE, DD_HOSPITAL_NAME -->
+<!-- FROM   -->
+<!-- 			DD_RESERVE r join DD_HOSPITAL h -->
+<!-- ON -->
+<!-- 			(r.DD_HOSPITAL_NO = h.DD_HOSPITAL_NO) -->
+<!-- WHERE  -->
+<!-- 			r.DD_RESERVE_DATE  &gt; #{dd_reserve_date}   -->
+<!-- AND  -->
+<!-- 			r.DD_RESERVE_DATE &lt; DATE_ADD(#{dd_reserve_date}, INTERVAL +1 DAY)  -->
+<!-- AND  -->
+<!-- 			DD_HOSPITAL_NAME=#{dd_hospital_name} -->
+
+<!--      </select> -->
+								  
+<select id="listTest" resultType="com.example.reserve.model.Hospital_reserveVo">
+	select * from test002
+</select>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+</mapper>
